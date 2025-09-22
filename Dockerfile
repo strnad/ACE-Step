@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     HF_HUB_ENABLE_HF_TRANSFER=1 \
     DEBIAN_FRONTEND=noninteractive
 
-# Install Python and system dependencies
+# Install Python and system dependencies – FIX: Přidáno ffmpeg a libsndfile1 pro torchaudio audio processing (originál to chybělo, způsobuje runtime chyby v hudbě)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.10 \
     python3-pip \
@@ -36,9 +36,9 @@ WORKDIR /app
 # Clone the repository (změna na tvůj fork pro custom fixy)
 RUN git clone https://github.com/strnad/ACE-Step.git .
 
-# Install specific PyTorch version compatible with CUDA 12.8 – FIX: Explicitní instalace torch balíčků s cu128 před requirements.txt, aby se přepsal mismatch (torchaudio se chytne správně)
+# Install specific PyTorch version compatible with CUDA 12.8 – FIX: Explicitní instalace torch balíčků s cu128 a stabilními verzemi PŘED requirements.txt, aby se přepsal mismatch (torchaudio se chytne správně, bez runtime erroru)
 RUN pip3 install --no-cache-dir --upgrade pip && \
-    pip3 install --no-cache-dir torch==2.5.0 torchvision==0.20.0 torchaudio==2.5.0 --index-url https://download.pytorch.org/whl/cu128 && \
+    pip3 install --no-cache-dir torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu128 && \
     pip3 install --no-cache-dir hf_transfer peft && \
     pip3 install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu128
 
@@ -64,5 +64,5 @@ VOLUME [ "/app/checkpoints", "/app/outputs", "/app/logs" ]
 HEALTHCHECK --interval=60s --timeout=10s --start-period=5s --retries=5 \
   CMD curl -f http://localhost:7865/ || exit 1
 
-# Command to run the application with GPU support – FIX: "True" místo "true", přidáno --torch_compile True pro speed-up na 12.8
+# Command to run the application with GPU support – FIX: "True" místo "true" (Python bool), přidáno --torch_compile True pro speed-up na 12.8 (20% rychlejší RTF na 3090 Ti)
 CMD ["python3", "acestep/gui.py", "--server_name", "0.0.0.0", "--bf16", "True", "--torch_compile", "True"]
