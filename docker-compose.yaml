@@ -1,11 +1,10 @@
-
 services:
-  &name ace-step:
+  ace-step:
     build:
-      context: https://github.com/ace-step/ACE-Step.git
+      context: https://github.com/strnad/ACE-Step.git
       dockerfile: Dockerfile
-    container_name: *name
-    hostname: *name
+    container_name: ace-step
+    hostname: ace-step
     stop_grace_period: 2s
     ports:
       - "7865:7865"
@@ -23,11 +22,5 @@ services:
       retries: 30
       start_period: 3s
     restart: unless-stopped
-    runtime: nvidia
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: ["compute", "utility", "graphics", "video"]
+    gpus: all
+    shm_size: 16gb  # Pro AI modely, aby nedošlo k paměťovým chybám – uprav podle potřeby, pokud máš méně RAM
